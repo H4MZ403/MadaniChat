@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "823427789530",
+    "project_id": "madanichat-ba132",
+    "storage_bucket": "madanichat-ba132.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823427789530:android:06c2512fe8fab133ab2be3",
+        "android_client_info": {
+          "package_name": "com.example.chat_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAc_k1602j-_5Bfb6uwF2p494XgX-IKuU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
