@@ -26,7 +26,8 @@ Here are snapshots showcasing the mobile application's user interface:
 2. **Messages, Contact and Settings Screen**:
   The Messages Screen is designed for users to effortlessly navigate and engage in chat conversations, displaying a comprehensive list of exchanged messages. On the Contact Screen, users can efficiently manage their network by finding, adding, or removing contacts, providing a centralized hub for all contact-related activities. Meanwhile, the Settings Screen offers a personalized experience, allowing users to configure preferences such as notifications, themes, and other customization options, ensuring the application aligns seamlessly with individual preferences.
   
-<img width="1917" alt="Screens_rounded_2" src="https://github.com/H4MZ403/MadaniChat/assets/93478160/bff594ef-0642-4fad-8765-02b1f3158329">
+<img width="1917" alt="Screens-2" src="https://github.com/H4MZ403/MadaniChat/assets/93478160/2b0109af-4ddc-4505-9e2c-54eedf849425">
+
 
 ###
 
