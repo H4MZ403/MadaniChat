@@ -38,24 +38,298 @@ class ChatRepository {
     final email = user.email ?? '';
     final cleanDisplayName = (displayName ?? user.displayName ?? '').trim();
 
-    final data = {
+    final baseData = {
       'uid': user.uid,
       'displayName': cleanDisplayName.isNotEmpty
           ? cleanDisplayName
           : email.split('@').first,
       'email': email,
       'emailLower': email.toLowerCase(),
-      'about': 'Hello! Catch me on MadaniChat',
-      'photoPath': 'lib/assets/avatar.jpg',
       'updatedAt': FieldValue.serverTimestamp(),
     };
 
     if (snapshot.exists) {
-      await userRef.set(data, SetOptions(merge: true));
+      await userRef.set(baseData, SetOptions(merge: true));
       return;
     }
 
-    await userRef.set({...data, 'createdAt': FieldValue.serverTimestamp()});
+    await userRef.set({
+      ...baseData,
+      'about': 'Hello! Catch me on MadaniChat',
+      'phoneNumber': '',
+      'photoPath': 'lib/assets/avatar.jpg',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Stream<AppUser> watchCurrentUserProfile() {
+    final uid = _currentUser.uid;
+    return _users.doc(uid).snapshots().map((snapshot) {
+      if (!snapshot.exists) {
+        return AppUser(
+          id: uid,
+          displayName: _currentUser.displayName ??
+              (_currentUser.email ?? 'User').split('@').first,
+          email: _currentUser.email ?? '',
+          emailLower: (_currentUser.email ?? '').toLowerCase(),
+          about: 'Hello! Catch me on MadaniChat',
+          phoneNumber: '',
+          photoPath: 'lib/assets/avatar.jpg',
+        );
+      }
+
+      return AppUser.fromSnapshot(snapshot);
+    });
+  }
+
+  Future<void> updateProfile({
+    required String displayName,
+    required String about,
+  }) async {
+    final user = _currentUser;
+    final cleanDisplayName = displayName.trim();
+    final cleanAbout = about.trim();
+
+    if (cleanDisplayName.isEmpty) {
+      throw ArgumentError('Name cannot be empty.');
+    }
+
+    await user.updateDisplayName(cleanDisplayName);
+
+    await _users.doc(user.uid).set({
+      'displayName': cleanDisplayName,
+      'about': cleanAbout.isEmpty ? 'Hello! Catch me on MadaniChat' : cleanAbout,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    await _syncUserDenormalizedFields(
+      displayName: cleanDisplayName,
+      about: cleanAbout.isEmpty ? 'Hello! Catch me on MadaniChat' : cleanAbout,
+    );
+  }
+
+  Future<void> updateEmail({
+    required String newEmail,
+    required String currentPassword,
+  }) async {
+    final user = _currentUser;
+    final cleanEmail = newEmail.trim().toLowerCase();
+
+    if (cleanEmail.isEmpty) {
+      throw ArgumentError('Email cannot be empty.');
+    }
+
+    await _reauthenticateWithPassword(currentPassword);
+    await user.updateEmail(cleanEmail);
+
+    await _users.doc(user.uid).set({
+      'email': cleanEmail,
+      'emailLower': cleanEmail,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    await _syncUserDenormalizedFields(email: cleanEmail);
+  }
+
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final cleanPassword = newPassword.trim();
+
+    if (cleanPassword.length < 6) {
+      throw ArgumentError('Password must be at least 6 characters.');
+    }
+
+    await _reauthenticateWithPassword(currentPassword);
+    await _currentUser.updatePassword(cleanPassword);
+  }
+
+  Future<void> updatePhoneNumber({
+    required String phoneNumber,
+    required String currentPassword,
+  }) async {
+    final cleanPhone = phoneNumber.trim();
+    await _reauthenticateWithPassword(currentPassword);
+
+    await _users.doc(_currentUser.uid).set({
+      'phoneNumber': cleanPhone,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> updateSecuritySettings({
+    required String currentPassword,
+    required String email,
+    required String phoneNumber,
+    String? newPassword,
+  }) async {
+    final user = _currentUser;
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanPhone = phoneNumber.trim();
+    final cleanPassword = newPassword?.trim() ?? '';
+
+    if (cleanEmail.isEmpty) {
+      throw ArgumentError('Email cannot be empty.');
+    }
+
+    if (cleanPassword.isNotEmpty && cleanPassword.length < 6) {
+      throw ArgumentError('Password must be at least 6 characters.');
+    }
+
+    await _reauthenticateWithPassword(currentPassword);
+
+    final oldEmail = user.email?.toLowerCase() ?? '';
+    if (cleanEmail != oldEmail) {
+      await user.updateEmail(cleanEmail);
+    }
+
+    if (cleanPassword.isNotEmpty) {
+      await user.updatePassword(cleanPassword);
+    }
+
+    await _users.doc(user.uid).set({
+      'email': cleanEmail,
+      'emailLower': cleanEmail,
+      'phoneNumber': cleanPhone,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    if (cleanEmail != oldEmail) {
+      await _syncUserDenormalizedFields(email: cleanEmail);
+    }
+  }
+
+  Future<void> verifyCurrentPassword(String currentPassword) async {
+    await _reauthenticateWithPassword(currentPassword);
+  }
+
+  Future<void> deleteCurrentAccount({required String currentPassword}) async {
+    final user = _currentUser;
+    final uid = user.uid;
+
+    await _reauthenticateWithPassword(currentPassword);
+
+    final contactsSnapshot = await _users.doc(uid).collection('contacts').get();
+    final contactCardsSnapshot = await _firestore
+        .collectionGroup('contacts')
+        .where('uid', isEqualTo: uid)
+        .get();
+    final outgoingRequests =
+        await _friendRequests.where('fromUid', isEqualTo: uid).get();
+    final incomingRequests =
+        await _friendRequests.where('toUid', isEqualTo: uid).get();
+    final userChats = await _chats.where('participantIds', arrayContains: uid).get();
+
+    var batch = _firestore.batch();
+    var operationCount = 0;
+
+    Future<void> commitIfNeeded({bool force = false}) async {
+      if (operationCount == 0 || (!force && operationCount < 450)) {
+        return;
+      }
+
+      await batch.commit();
+      batch = _firestore.batch();
+      operationCount = 0;
+    }
+
+    Future<void> queueDelete(DocumentReference reference) async {
+      batch.delete(reference);
+      operationCount++;
+      await commitIfNeeded();
+    }
+
+    for (final contact in contactsSnapshot.docs) {
+      await queueDelete(contact.reference);
+    }
+
+    for (final contactCard in contactCardsSnapshot.docs) {
+      await queueDelete(contactCard.reference);
+    }
+
+    for (final request in outgoingRequests.docs) {
+      await queueDelete(request.reference);
+    }
+
+    for (final request in incomingRequests.docs) {
+      await queueDelete(request.reference);
+    }
+
+    for (final chat in userChats.docs) {
+      final messages = await chat.reference.collection('messages').get();
+      for (final message in messages.docs) {
+        await queueDelete(message.reference);
+      }
+      await queueDelete(chat.reference);
+    }
+
+    await queueDelete(_users.doc(uid));
+    await commitIfNeeded(force: true);
+
+    await user.delete();
+  }
+
+  Future<void> _reauthenticateWithPassword(String currentPassword) async {
+    final user = _currentUser;
+    final email = user.email;
+
+    if (email == null || email.isEmpty) {
+      throw StateError('Current account does not have an email login.');
+    }
+
+    if (currentPassword.isEmpty) {
+      throw ArgumentError('Current password is required.');
+    }
+
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: currentPassword,
+    );
+    await user.reauthenticateWithCredential(credential);
+  }
+
+  Future<void> _syncUserDenormalizedFields({
+    String? displayName,
+    String? about,
+    String? email,
+  }) async {
+    final uid = _currentUser.uid;
+    final batch = _firestore.batch();
+
+    if (displayName != null || email != null || about != null) {
+      final contacts = await _firestore
+          .collectionGroup('contacts')
+          .where('uid', isEqualTo: uid)
+          .get();
+
+      for (final contact in contacts.docs) {
+        final data = <String, dynamic>{
+          'updatedAt': FieldValue.serverTimestamp(),
+        };
+        if (displayName != null) data['displayName'] = displayName;
+        if (email != null) {
+          data['email'] = email;
+          data['emailLower'] = email.toLowerCase();
+        }
+        if (about != null) data['about'] = about;
+        batch.set(contact.reference, data, SetOptions(merge: true));
+      }
+    }
+
+    if (displayName != null || email != null) {
+      final chats = await _chats.where('participantIds', arrayContains: uid).get();
+      for (final chat in chats.docs) {
+        final data = <String, dynamic>{
+          'updatedAt': FieldValue.serverTimestamp(),
+        };
+        if (displayName != null) data['participantNames.$uid'] = displayName;
+        if (email != null) data['participantEmails.$uid'] = email;
+        batch.set(chat.reference, data, SetOptions(merge: true));
+      }
+    }
+
+    await batch.commit();
   }
 
   Stream<List<Contact>> watchContacts() {

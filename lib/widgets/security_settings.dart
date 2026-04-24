@@ -1,3 +1,4 @@
+import 'package:chat_app/models/app_user.dart';
 import 'package:feather_icons_svg/feather_icons_svg.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,16 +6,20 @@ import '../components/custom_container.dart';
 import '../utils/colors.dart';
 
 class SecurityWidget extends StatelessWidget {
-  const SecurityWidget({super.key});
+  final AppUser user;
+  final VoidCallback onEdit;
+
+  const SecurityWidget({
+    super.key,
+    required this.user,
+    required this.onEdit,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /*
-          SECURITY SETTINGS
-        */
         Padding(
           padding: const EdgeInsets.only(left: 22, top: 8),
           child: Text(
@@ -27,71 +32,82 @@ class SecurityWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 9),
-        /*
-          CustomContainer contains my profile settings
-        */
         CustomContainer(
           padding: const EdgeInsets.only(
             left: 15,
-            right: 15,
-            bottom: 16,
+            right: 8,
+            bottom: 10,
             top: 7,
           ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    _SecurityRow(label: 'Email', value: user.email),
+                    Divider(color: grey),
+                    _SecurityRow(
+                      label: 'Phone Number',
+                      value: user.phoneNumber.isEmpty
+                          ? 'Not set'
+                          : user.phoneNumber,
+                    ),
+                    Divider(color: grey),
+                    const _SecurityRow(
+                      label: 'Password',
+                      value: '*************',
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                alignment: Alignment.centerRight,
+                icon: FeatherIcon(
+                  FeatherIcons.edit,
+                  color: lightGrey,
+                  size: 15,
+                ),
+                onPressed: onEdit,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SecurityRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _SecurityRow({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /*
-                Row: PASSWORD + EDIT BUTTON
-              */
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // ROW: Avatar, Name and About
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Password',
-                        style: GoogleFonts.quicksand(
-                          color: const Color(0XFF868686),
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        '*************',
-                        style: GoogleFonts.quicksand(
-                          color: const Color(0XFF333333),
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Edit Icon
-                  IconButton(
-                    alignment: Alignment.centerRight,
-                    icon: FeatherIcon(
-                      FeatherIcons.edit,
-                      color: lightGrey,
-                      size: 15,
-                    ),
-                    onPressed: () {},
-                  ),
-                ],
+              Text(
+                label,
+                style: GoogleFonts.quicksand(
+                  color: const Color(0XFF868686),
+                  fontSize: 14,
+                ),
               ),
-              /*
-                Column: TWO FACTOR AUTHENTICATION
-              */
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Two-Factor Authentication',
-                    style: GoogleFonts.quicksand(
-                      color: const Color(0XFF868686),
-                      fontSize: 14,
-                    ),
-                  ),
-                  Text('ON (SMS)', style: GoogleFonts.quicksand(color: green)),
-                ],
+              Text(
+                value,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.quicksand(
+                  color: const Color(0XFF333333),
+                ),
               ),
             ],
           ),

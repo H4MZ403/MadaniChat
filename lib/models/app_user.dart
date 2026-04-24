@@ -6,6 +6,7 @@ class AppUser {
   final String email;
   final String emailLower;
   final String about;
+  final String phoneNumber;
   final String photoPath;
 
   const AppUser({
@@ -14,6 +15,7 @@ class AppUser {
     required this.email,
     required this.emailLower,
     required this.about,
+    required this.phoneNumber,
     required this.photoPath,
   });
 
@@ -29,6 +31,7 @@ class AppUser {
       email: email,
       emailLower: (data['emailLower'] as String?) ?? email.toLowerCase(),
       about: (data['about'] as String?) ?? 'Hello! Catch me on MadaniChat',
+      phoneNumber: (data['phoneNumber'] as String?) ?? '',
       photoPath: (data['photoPath'] as String?) ?? 'lib/assets/avatar.jpg',
     );
   }
@@ -40,6 +43,7 @@ class AppUser {
       'email': email,
       'emailLower': emailLower,
       'about': about,
+      'phoneNumber': phoneNumber,
       'photoPath': photoPath,
       'updatedAt': FieldValue.serverTimestamp(),
     };

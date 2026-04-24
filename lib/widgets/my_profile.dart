@@ -1,27 +1,25 @@
+import 'package:chat_app/models/app_user.dart';
 import 'package:feather_icons_svg/feather_icons_svg.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../components/custom_container.dart';
 import '../utils/colors.dart';
 
 class ProfileWidget extends StatelessWidget {
-  const ProfileWidget({super.key});
+  final AppUser user;
+  final VoidCallback onEdit;
+
+  const ProfileWidget({
+    super.key,
+    required this.user,
+    required this.onEdit,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName?.trim().isNotEmpty == true
-        ? user!.displayName!
-        : user?.email?.split('@').first ?? 'User';
-    final email = user?.email ?? 'No email';
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /*
-          M Y   P R O F I L E
-        */
         Padding(
           padding: const EdgeInsets.only(left: 22, top: 8),
           child: Text(
@@ -34,9 +32,6 @@ class ProfileWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 9),
-        /*
-          CustomContainer contains my profile settings
-        */
         CustomContainer(
           padding: const EdgeInsets.only(
             left: 15,
@@ -44,103 +39,43 @@ class ProfileWidget extends StatelessWidget {
             bottom: 16,
             top: 7,
           ),
-          child: Column(
+          child: Row(
             children: [
-              /*
-                Row: AVATAR / NAME / ABOUT / EDIT ICON
-              */
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // ROW: Avatar, Name and About
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        backgroundImage: AssetImage('lib/assets/avatar.jpg'),
+              CircleAvatar(backgroundImage: AssetImage(user.photoPath)),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.displayName,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.quicksand(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: grey_333,
                       ),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            style: GoogleFonts.quicksand(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: grey_333,
-                            ),
-                          ),
-                          Text(
-                            'Hello! Catch me on MadaniChat',
-                            style: GoogleFonts.quicksand(
-                              fontSize: 12,
-                              color: grey_333,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  // Edit Icon
-                  IconButton(
-                    alignment: Alignment.centerRight,
-                    icon: FeatherIcon(
-                      FeatherIcons.edit,
-                      color: lightGrey,
-                      size: 15,
                     ),
-                    onPressed: () {},
-                  ),
-                ],
+                    Text(
+                      user.about,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                      style: GoogleFonts.quicksand(
+                        fontSize: 12,
+                        color: grey_333,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 17),
-              /*
-                Row: EMAIL / PHONE NUMBER
-              */
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Email
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Email',
-                        style: GoogleFonts.quicksand(
-                          color: const Color(0XFF868686),
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        email,
-                        style: GoogleFonts.quicksand(
-                          color: const Color(0XFF333333),
-                        ),
-                      ),
-                    ],
-                  ),
-                  // const SizedBox(width: 24),
-                  // Phone Number
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Phone Number',
-                        style: GoogleFonts.quicksand(
-                          color: const Color(0XFF868686),
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        '+212 000 00 00 00',
-                        style: GoogleFonts.quicksand(
-                          color: const Color(0XFF333333),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(),
-                ],
+              IconButton(
+                alignment: Alignment.centerRight,
+                icon: FeatherIcon(
+                  FeatherIcons.edit,
+                  color: lightGrey,
+                  size: 15,
+                ),
+                onPressed: onEdit,
               ),
             ],
           ),
