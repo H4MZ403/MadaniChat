@@ -29,7 +29,7 @@ class _HomepageState extends State<Homepage> {
   final List<Widget> _pages = [
     const MessagesPage(),
     const ContactPage(),
-    const SettingPage()
+    const SettingPage(),
   ];
 
   @override
@@ -37,37 +37,34 @@ class _HomepageState extends State<Homepage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
-        padding: const EdgeInsets.only(top: 20, right: 15, left: 15),
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: secondGradient,
-        ),
-        child: Column(
-          children: [
-            /*
-                  T O P   B A R
-                */
-            const MyTopBar(),
-            const SizedBox(height: 20),
-            Expanded(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  _pages[_selectedIndex],
-                  /*
-                    N A V   B A R
-                  */
-                  Positioned(
-                    bottom: 15,
-                    child: MyBottomNavBar(
-                      onTabChange: (index) => navigationBottomBar(index),
-                    ),
+        decoration: BoxDecoration(gradient: secondGradient),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12, right: 15, left: 15),
+            child: Column(
+              children: [
+                const MyTopBar(),
+                const SizedBox(height: 18),
+                Expanded(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      _pages[_selectedIndex],
+                      Positioned(
+                        bottom: 15,
+                        child: MyBottomNavBar(
+                          onTabChange: (index) => navigationBottomBar(index),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -20,7 +20,10 @@ class NotificationWidget extends StatelessWidget {
           child: Text(
             'Notifications',
             style: GoogleFonts.quicksand(
-                fontSize: 16, color: customGrey, fontWeight: FontWeight.bold),
+              fontSize: 16,
+              color: customGrey,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         const SizedBox(height: 9),
@@ -28,8 +31,12 @@ class NotificationWidget extends StatelessWidget {
           CustomContainer contains my profile settings
         */
         CustomContainer(
-          padding:
-              const EdgeInsets.only(left: 15, right: 15, bottom: 16, top: 7),
+          padding: const EdgeInsets.only(
+            left: 15,
+            right: 15,
+            bottom: 16,
+            top: 7,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -44,12 +51,7 @@ class NotificationWidget extends StatelessWidget {
                       fontSize: 14,
                     ),
                   ),
-                  Text(
-                    'ON',
-                    style: GoogleFonts.quicksand(
-                      color: green,
-                    ),
-                  ),
+                  Text('ON', style: GoogleFonts.quicksand(color: green)),
                 ],
               ),
               // Column: Avatar, Name and About

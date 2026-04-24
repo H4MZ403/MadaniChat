@@ -14,22 +14,22 @@ class MySearchBar extends StatelessWidget {
         padding: const EdgeInsets.only(left: 10.0),
         child: FeatherIcon(
           FeatherIcons.search,
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha: 77),
         ),
       ),
-      // set the controller later for the search functionality
-      controller: TextEditingController(),
-      hintStyle: MaterialStatePropertyAll(
+      hintStyle: WidgetStatePropertyAll(
         GoogleFonts.quicksand(
           fontWeight: FontWeight.w600,
           fontSize: 18,
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha: 77),
         ),
       ),
-      surfaceTintColor: const MaterialStatePropertyAll(Colors.white),
-      elevation: const MaterialStatePropertyAll(4),
-      shadowColor: MaterialStatePropertyAll(Colors.black.withOpacity(0.5)),
-      shape: const MaterialStatePropertyAll(
+      surfaceTintColor: const WidgetStatePropertyAll(Colors.white),
+      elevation: const WidgetStatePropertyAll(4),
+      shadowColor: WidgetStatePropertyAll(
+        Colors.black.withValues(alpha: 128),
+      ), // 50% opacity
+      shape: const WidgetStatePropertyAll(
         RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(20)),
         ),

@@ -61,57 +61,68 @@ class _StartPageState extends State<StartPage> {
               flex: 1,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.only(top: 30),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
                 ),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: Column(
-                    children: [
-                      Text(
-                        'Breaking Silence,\nBuilding Connections',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.judson(
-                          fontSize: 30 * size,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black.withOpacity(0.8),
-                          height: 1.1,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      Text(
-                        'Your journey into the next level of\n communication starts here!',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.judson(
-                          fontSize: 20 * size,
-                          height: 1.1,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black.withOpacity(0.6),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 30 * size,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 110),
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.pushReplacementNamed(
-                                context, '/auth_page');
-                          },
-                          child: MyButton(
-                            title: 'Get Started',
-                            fontSize: 22 * size,
-                            color: Colors.yellow[500],
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxHeight < 220;
+                    final titleSize = (compact ? 24 : 30) * size;
+                    final bodySize = (compact ? 17 : 20) * size;
+                    final verticalGap = (compact ? 10 : 20) * size;
+
+                    return Padding(
+                      padding: EdgeInsets.only(top: compact ? 16 : 30),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Breaking Silence,\nBuilding Connections',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.judson(
+                              fontSize: titleSize,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black.withValues(
+                                alpha: 204,
+                              ), // 80% opacity
+                              height: 1.1,
+                            ),
                           ),
-                        ),
+                          SizedBox(height: verticalGap),
+                          Text(
+                            'Your journey into the next level of\n communication starts here!',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.judson(
+                              fontSize: bodySize,
+                              height: 1.1,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black.withValues(
+                                alpha: 153,
+                              ), // 60% opacity
+                            ),
+                          ),
+                          SizedBox(height: verticalGap),
+                          FractionallySizedBox(
+                            widthFactor: compact ? 0.42 : 0.45,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  '/auth_page',
+                                );
+                              },
+                              child: MyButton(
+                                title: 'Get Started',
+                                fontSize: (compact ? 18 : 22) * size,
+                                color: Colors.yellow[500],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
             ),

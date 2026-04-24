@@ -34,12 +34,22 @@ class _MyTextFieldState extends State<MyTextField> {
         decoration: InputDecoration(
           hintText: widget.hintText,
           border: InputBorder.none,
+          suffixIcon: widget.obsecureText
+              ? IconButton(
+                  onPressed: toggleObsecureState,
+                  icon: Icon(
+                    obsecureTextVar
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                )
+              : null,
           hintStyle: TextStyle(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 77),
             fontSize: 16,
           ),
         ),
-        obscureText: widget.obsecureText,
+        obscureText: obsecureTextVar,
       ),
     );
   }

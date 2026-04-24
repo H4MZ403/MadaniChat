@@ -2,6 +2,7 @@ import 'package:chat_app/components/my_button.dart';
 import 'package:chat_app/widgets/my_profile.dart';
 import 'package:chat_app/widgets/notification_settings.dart';
 import 'package:chat_app/widgets/security_settings.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../components/my_search_bar.dart';
@@ -16,6 +17,21 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
+  Future<void> logOut() async {
+    await FirebaseAuth.instance.signOut();
+  }
+
+  Future<void> deleteAccount() async {
+    try {
+      await FirebaseAuth.instance.currentUser?.delete();
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message ?? 'Unable to delete account.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -28,8 +44,9 @@ class _SettingPageState extends State<SettingPage> {
             width: double.infinity,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(30)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(30),
+              ),
               boxShadow: boxShadow,
             ),
             child: Column(
@@ -45,8 +62,7 @@ class _SettingPageState extends State<SettingPage> {
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 580,
+                Expanded(
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
@@ -67,8 +83,7 @@ class _SettingPageState extends State<SettingPage> {
                         const SizedBox(height: 20),
                         // LOGOUT BUTTON
                         GestureDetector(
-                          // implement the functionality later
-                          onTap: () {},
+                          onTap: logOut,
                           child: MyButton(
                             title: 'Log out',
                             fontSize: 16,
@@ -76,17 +91,13 @@ class _SettingPageState extends State<SettingPage> {
                             color: lightRed,
                             shadowEnabled: false,
                             fontColor: fontColor,
-                            border: Border.all(
-                              color: strokeColor,
-                              width: 2,
-                            ),
+                            border: Border.all(color: strokeColor, width: 2),
                           ),
                         ),
                         const SizedBox(height: 20),
                         // DELETE ACCOUNT BUTTON
                         GestureDetector(
-                          // implement the functionality later
-                          onTap: () {},
+                          onTap: deleteAccount,
                           child: MyButton(
                             title: 'Delete Account',
                             fontSize: 16,
@@ -103,7 +114,7 @@ class _SettingPageState extends State<SettingPage> {
                       ],
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),

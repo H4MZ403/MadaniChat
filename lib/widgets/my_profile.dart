@@ -1,4 +1,5 @@
 import 'package:feather_icons_svg/feather_icons_svg.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../components/custom_container.dart';
@@ -9,6 +10,12 @@ class ProfileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final name = user?.displayName?.trim().isNotEmpty == true
+        ? user!.displayName!
+        : user?.email?.split('@').first ?? 'User';
+    final email = user?.email ?? 'No email';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -20,7 +27,10 @@ class ProfileWidget extends StatelessWidget {
           child: Text(
             'My Profile',
             style: GoogleFonts.quicksand(
-                fontSize: 16, color: customGrey, fontWeight: FontWeight.bold),
+              fontSize: 16,
+              color: customGrey,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         const SizedBox(height: 9),
@@ -28,8 +38,12 @@ class ProfileWidget extends StatelessWidget {
           CustomContainer contains my profile settings
         */
         CustomContainer(
-          padding:
-              const EdgeInsets.only(left: 15, right: 15, bottom: 16, top: 7),
+          padding: const EdgeInsets.only(
+            left: 15,
+            right: 15,
+            bottom: 16,
+            top: 7,
+          ),
           child: Column(
             children: [
               /*
@@ -44,14 +58,12 @@ class ProfileWidget extends StatelessWidget {
                       const CircleAvatar(
                         backgroundImage: AssetImage('lib/assets/avatar.jpg'),
                       ),
-                      const SizedBox(
-                        width: 16,
-                      ),
+                      const SizedBox(width: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Hamza',
+                            name,
                             style: GoogleFonts.quicksand(
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
@@ -100,9 +112,10 @@ class ProfileWidget extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'hamza@gmail.com',
+                        email,
                         style: GoogleFonts.quicksand(
-                            color: const Color(0XFF333333)),
+                          color: const Color(0XFF333333),
+                        ),
                       ),
                     ],
                   ),
@@ -121,11 +134,12 @@ class ProfileWidget extends StatelessWidget {
                       Text(
                         '+212 000 00 00 00',
                         style: GoogleFonts.quicksand(
-                            color: const Color(0XFF333333)),
+                          color: const Color(0XFF333333),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox()
+                  const SizedBox(),
                 ],
               ),
             ],

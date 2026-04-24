@@ -1,5 +1,7 @@
 import 'package:chat_app/components/my_button.dart';
+import 'package:chat_app/services/chat_repository.dart';
 import 'package:chat_app/utils/colors.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,10 +11,7 @@ import '../utils/utils.dart';
 class SignInPage extends StatefulWidget {
   final void Function() onTap;
 
-  const SignInPage({
-    super.key,
-    required this.onTap,
-  });
+  const SignInPage({super.key, required this.onTap});
 
   @override
   State<SignInPage> createState() => _SignInPageState();
@@ -21,6 +20,40 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final chatRepository = ChatRepository();
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> signIn() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+      await chatRepository.ensureCurrentUserProfile();
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message ?? 'Unable to sign in.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +86,7 @@ class _SignInPageState extends State<SignInPage> {
                   ),
                 ),
               ),
-              const SizedBox(
-                height: 40,
-              ),
+              const SizedBox(height: 40),
               Align(
                 alignment: Alignment.centerRight,
                 child: SvgPicture.asset(
@@ -63,15 +94,11 @@ class _SignInPageState extends State<SignInPage> {
                   height: 200,
                 ),
               ),
-              const SizedBox(
-                height: 60,
-              ),
+              const SizedBox(height: 60),
               Column(
                 children: [
                   Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                    ),
+                    margin: const EdgeInsets.symmetric(horizontal: 40),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -84,9 +111,7 @@ class _SignInPageState extends State<SignInPage> {
                           hintText: 'Email',
                           obsecureText: false,
                         ),
-                        Divider(
-                          color: grey,
-                        ),
+                        Divider(color: grey),
                         MyTextField(
                           controller: passwordController,
                           hintText: 'Password',
@@ -100,11 +125,9 @@ class _SignInPageState extends State<SignInPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 42),
                     // Sign In button
                     child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/home_page');
-                      },
+                      onTap: isLoading ? null : signIn,
                       child: MyButton(
-                        title: 'Sign In',
+                        title: isLoading ? 'Signing In...' : 'Sign In',
                         fontSize: 22,
                         color: Colors.yellow[500],
                       ),
@@ -116,9 +139,7 @@ class _SignInPageState extends State<SignInPage> {
                     children: [
                       const Text(
                         'Not a member?',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       GestureDetector(
                         onTap: widget.onTap,
@@ -129,9 +150,9 @@ class _SignInPageState extends State<SignInPage> {
                             color: iris_100,
                           ),
                         ),
-                      )
+                      ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ],

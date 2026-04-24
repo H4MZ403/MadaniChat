@@ -12,16 +12,13 @@ class MyBottomNavBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(
-          color: Colors.yellow.shade500,
-          width: 2,
-        ),
+        border: Border.all(color: Colors.yellow.shade500, width: 2),
         boxShadow: boxShadow,
         borderRadius: BorderRadius.circular(100),
       ),
       child: GNav(
         padding: const EdgeInsets.all(15),
-        color: Colors.black.withOpacity(0.4),
+        color: Colors.black.withValues(alpha: 102), // 40% opacity
         activeColor: Colors.black,
         tabBackgroundColor: Colors.yellow.shade500,
         textStyle: GoogleFonts.quicksand(
@@ -32,18 +29,9 @@ class MyBottomNavBar extends StatelessWidget {
         onTabChange: (value) => onTabChange!(value),
         gap: 3,
         tabs: const [
-          GButton(
-            icon: Icons.chat_outlined,
-            text: 'Message',
-          ),
-          GButton(
-            icon: Icons.contact_page_outlined,
-            text: 'Contact',
-          ),
-          GButton(
-            icon: Icons.settings_outlined,
-            text: 'Settings',
-          ),
+          GButton(icon: Icons.chat_outlined, text: 'Message'),
+          GButton(icon: Icons.contact_page_outlined, text: 'Contact'),
+          GButton(icon: Icons.settings_outlined, text: 'Settings'),
         ],
       ),
     );

@@ -1,13 +1,17 @@
 class Contact {
-  String imagePath;
-  String username;
-  String about;
-  DateTime createdAt;
+  final String id;
+  final String imagePath;
+  final String username;
+  final String email;
+  final String about;
+  final DateTime createdAt;
 
-  Contact(
-    this.imagePath,
-    this.username,
-    this.about,
-    this.createdAt,
-  );
+  const Contact({
+    required this.id,
+    required this.imagePath,
+    required this.username,
+    required this.email,
+    required this.about,
+    required this.createdAt,
+  });
 }

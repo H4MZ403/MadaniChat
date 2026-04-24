@@ -20,7 +20,10 @@ class SecurityWidget extends StatelessWidget {
           child: Text(
             'Security',
             style: GoogleFonts.quicksand(
-                fontSize: 16, color: customGrey, fontWeight: FontWeight.bold),
+              fontSize: 16,
+              color: customGrey,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         const SizedBox(height: 9),
@@ -28,8 +31,12 @@ class SecurityWidget extends StatelessWidget {
           CustomContainer contains my profile settings
         */
         CustomContainer(
-          padding:
-              const EdgeInsets.only(left: 15, right: 15, bottom: 16, top: 7),
+          padding: const EdgeInsets.only(
+            left: 15,
+            right: 15,
+            bottom: 16,
+            top: 7,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -83,12 +90,7 @@ class SecurityWidget extends StatelessWidget {
                       fontSize: 14,
                     ),
                   ),
-                  Text(
-                    'ON (SMS)',
-                    style: GoogleFonts.quicksand(
-                      color: green,
-                    ),
-                  ),
+                  Text('ON (SMS)', style: GoogleFonts.quicksand(color: green)),
                 ],
               ),
             ],

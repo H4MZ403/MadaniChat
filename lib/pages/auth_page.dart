@@ -1,27 +1,64 @@
-// import 'package:firebase_auth/firebase_auth.dart';
+import 'package:chat_app/pages/home_page.dart';
+import 'package:chat_app/services/chat_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'login_or_register.dart';
 
 class AuthPage extends StatelessWidget {
-  const AuthPage({Key? key}) : super(key: key);
+  const AuthPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // return Scaffold(
-    //   body: StreamBuilder<User?>(
-    //     stream: FirebaseAuth.instance.authStateChanges() ,
-    //     builder: (context, snapshot) {
-    //        // user is logged in
-    //        if (snapshot.hasData) {
-    //         // return const AccountPage();
-    //         return const MyHomePage();
-    //        } else {
-    //          return const LoginOrRegisterPage();
-    //        }
-    //        // user is not logged in
-    //     },
-    //   ),
-    // );
-    return const LoginOrRegisterPage();
+    if (Firebase.apps.isEmpty) {
+      return const Scaffold(
+        body: Center(
+          child: Text('Firebase is not configured for this platform.'),
+        ),
+      );
+    }
+
+    return Scaffold(
+      body: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasData) {
+            return const _ProfileGate();
+          }
+
+          return const LoginOrRegisterPage();
+        },
+      ),
+    );
+  }
+}
+
+class _ProfileGate extends StatefulWidget {
+  const _ProfileGate();
+
+  @override
+  State<_ProfileGate> createState() => _ProfileGateState();
+}
+
+class _ProfileGateState extends State<_ProfileGate> {
+  late final Future<void> profileFuture = ChatRepository()
+      .ensureCurrentUserProfile();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: profileFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        return const Homepage();
+      },
+    );
   }
 }

@@ -4,83 +4,82 @@ import 'package:google_fonts/google_fonts.dart';
 
 class MyMessage extends StatelessWidget {
   final Message message;
-  const MyMessage({
-    super.key,
-    required this.message,
-  });
+  final VoidCallback? onTap;
+
+  const MyMessage({super.key, required this.message, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding:
-              const EdgeInsets.only(left: 17, right: 11, bottom: 13, top: 7),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.only(left: 17, right: 11, bottom: 13, top: 7),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Row(
                 children: [
-                  /* Avatar of the user */
-                  CircleAvatar(
-                    backgroundImage: AssetImage(message.imagePath),
-                  ),
+                  CircleAvatar(backgroundImage: AssetImage(message.imagePath)),
                   const SizedBox(width: 14),
-                  // Column: Username & Message
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      /* Username */
-                      Text(
-                        message.username,
-                        style: GoogleFonts.quicksand(
-                          fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message.username,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.quicksand(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      /* Current Message */
-                      Text(
-                        message.currentMessage,
-                        style: GoogleFonts.quicksand(
+                        Text(
+                          message.currentMessage,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.quicksand(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black.withOpacity(0.3)),
-                      ),
-                    ],
+                            color: Colors.black.withOpacity(0.3),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-
-              // Column: Message date & badge
-              Column(
-                children: [
-                  // Date
-                  Text(
-                    '${message.dateTime.hour}:${message.dateTime.minute}',
-                    style: GoogleFonts.judson(
+            ),
+            const SizedBox(width: 10),
+            Column(
+              children: [
+                Text(
+                  _formatTime(message.dateTime),
+                  style: GoogleFonts.judson(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black.withOpacity(0.3),
+                  ),
+                ),
+                if (message.badgeCount > 0)
+                  Badge.count(
+                    count: message.badgeCount,
+                    backgroundColor: Colors.yellow[500],
+                    textColor: Colors.black,
+                    textStyle: GoogleFonts.judson(
                       fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black.withOpacity(0.3),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  // Badge
-                  Badge(
-                    isLabelVisible: false,
-                    child: Badge.count(
-                      count: message.badgeCount,
-                      backgroundColor: Colors.yellow[500],
-                      textColor: Colors.black,
-                      textStyle: GoogleFonts.judson(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
-      ],
+      ),
     );
+  }
+
+  String _formatTime(DateTime value) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }
