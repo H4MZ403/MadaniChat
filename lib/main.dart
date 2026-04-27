@@ -31,7 +31,10 @@ class MyApp extends StatelessWidget {
       ),
       home: Firebase.apps.isEmpty ? const StartPage() : const AppEntryPoint(),
       // route of all the pages
-      routes: {'/auth_page': (context) => const AuthPage()},
+      routes: {
+        '/auth_page': (context) => const AuthPage(),
+        '/register_page': (context) => const AuthPage(showRegisterFirst: true),
+      },
     );
   }
 }

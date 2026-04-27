@@ -22,18 +22,22 @@ class _SettingPageState extends State<SettingPage> {
   final chatRepository = ChatRepository();
 
   Future<void> logOut() async {
-    final shouldLogOut = await _showConfirmDialog(
-      title: 'Log Out',
-      message: 'Are you sure you want to log out of MadaniChat?',
-      confirmTitle: 'Log out',
-    );
+    final shouldLogOut = await _showLogoutDialog();
 
     if (shouldLogOut != true) {
       return;
     }
 
     if (!mounted) return;
-    await FirebaseAuth.instance.signOut();
+    final navigator = Navigator.of(context, rootNavigator: true);
+
+    try {
+      await FirebaseAuth.instance.signOut();
+      navigator.pushNamedAndRemoveUntil('/auth_page', (_) => false);
+    } catch (error) {
+      if (!mounted) return;
+      _showDialogError(error);
+    }
   }
 
   Future<void> deleteAccount() async {
@@ -401,10 +405,7 @@ class _SettingPageState extends State<SettingPage> {
                             color: lightRed,
                             shadowEnabled: false,
                             fontColor: fontColor,
-                            border: Border.all(
-                              color: strokeColor,
-                              width: 1.5,
-                            ),
+                            border: Border.all(color: strokeColor, width: 1.5),
                           ),
                         ),
                       ),
@@ -459,43 +460,96 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
-  Future<bool?> _showConfirmDialog({
-    required String title,
-    required String message,
-    required String confirmTitle,
-  }) {
+  Future<bool?> _showLogoutDialog() {
     return showDialog<bool>(
       context: context,
       builder: (context) {
-        return _SettingsDialogShell(
-          title: title,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.yellow[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: strokeColor),
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: boxShadow,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: lightRed,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0X4DFF7777),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Icon(Icons.logout_rounded, color: red, size: 26),
                 ),
-                child: Text(
-                  message,
+                const SizedBox(height: 14),
+                Text(
+                  'Log out?',
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.quicksand(
                     color: customGrey,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              _DialogActions(
-                isSaving: false,
-                saveTitle: confirmTitle,
-                onCancel: () => Navigator.pop(context, false),
-                onSave: () async => Navigator.pop(context, true),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  'You will return to the sign in page.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.quicksand(
+                    color: lightGrey,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, false),
+                        child: MyButton(
+                          title: 'Cancel',
+                          fontSize: 15,
+                          color: lightRed,
+                          shadowEnabled: false,
+                          fontColor: fontColor,
+                          border: Border.all(color: strokeColor, width: 1.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, true),
+                        child: MyButton(
+                          title: 'Log out',
+                          fontSize: 15,
+                          color: Colors.yellow[500],
+                          shadowEnabled: false,
+                          fontColor: Colors.black,
+                          border: Border.all(
+                            color: Colors.yellow.shade600,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -515,17 +569,15 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   void _showDialogError(Object error) {
-    ScaffoldMessenger.of(this.context).showSnackBar(
-      SnackBar(
-        content: Text(_errorMessage(error)),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(_errorMessage(error))));
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -600,13 +652,16 @@ class _SettingPageState extends State<SettingPage> {
                               child: MyButton(
                                 title: 'Log out',
                                 fontSize: 16,
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 15,
+                                ),
                                 color: lightRed,
                                 shadowEnabled: false,
                                 fontColor: fontColor,
-                                border:
-                                    Border.all(color: strokeColor, width: 2),
+                                border: Border.all(
+                                  color: strokeColor,
+                                  width: 2,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -615,8 +670,9 @@ class _SettingPageState extends State<SettingPage> {
                               child: MyButton(
                                 title: 'Delete Account',
                                 fontSize: 16,
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 15,
+                                ),
                                 color: lightRed,
                                 shadowEnabled: false,
                                 fontColor: red,
@@ -664,10 +720,7 @@ class _SettingsDialogShell extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const _SettingsDialogShell({
-    required this.title,
-    required this.child,
-  });
+  const _SettingsDialogShell({required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -707,9 +760,7 @@ class _SettingsDialogShell extends StatelessWidget {
 class _DialogTextField extends StatelessWidget {
   final _DialogField field;
 
-  const _DialogTextField({
-    required this.field,
-  });
+  const _DialogTextField({required this.field});
 
   @override
   Widget build(BuildContext context) {
@@ -740,8 +791,10 @@ class _DialogTextField extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 12,
+          ),
         ),
       ),
     );

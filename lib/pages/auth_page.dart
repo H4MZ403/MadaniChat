@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'login_or_register.dart';
 
 class AuthPage extends StatelessWidget {
-  const AuthPage({super.key});
+  final bool showRegisterFirst;
+
+  const AuthPage({super.key, this.showRegisterFirst = false});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +32,7 @@ class AuthPage extends StatelessWidget {
             return const _ProfileGate();
           }
 
-          return const LoginOrRegisterPage();
+          return LoginOrRegisterPage(showRegisterFirst: showRegisterFirst);
         },
       ),
     );

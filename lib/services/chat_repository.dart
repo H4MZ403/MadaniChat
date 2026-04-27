@@ -68,7 +68,8 @@ class ChatRepository {
       if (!snapshot.exists) {
         return AppUser(
           id: uid,
-          displayName: _currentUser.displayName ??
+          displayName:
+              _currentUser.displayName ??
               (_currentUser.email ?? 'User').split('@').first,
           email: _currentUser.email ?? '',
           emailLower: (_currentUser.email ?? '').toLowerCase(),
@@ -98,7 +99,9 @@ class ChatRepository {
 
     await _users.doc(user.uid).set({
       'displayName': cleanDisplayName,
-      'about': cleanAbout.isEmpty ? 'Hello! Catch me on MadaniChat' : cleanAbout,
+      'about': cleanAbout.isEmpty
+          ? 'Hello! Catch me on MadaniChat'
+          : cleanAbout,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
 
@@ -211,15 +214,15 @@ class ChatRepository {
     await _reauthenticateWithPassword(currentPassword);
 
     final contactsSnapshot = await _users.doc(uid).collection('contacts').get();
-    final contactCardsSnapshot = await _firestore
-        .collectionGroup('contacts')
-        .where('uid', isEqualTo: uid)
+    final outgoingRequests = await _friendRequests
+        .where('fromUid', isEqualTo: uid)
         .get();
-    final outgoingRequests =
-        await _friendRequests.where('fromUid', isEqualTo: uid).get();
-    final incomingRequests =
-        await _friendRequests.where('toUid', isEqualTo: uid).get();
-    final userChats = await _chats.where('participantIds', arrayContains: uid).get();
+    final incomingRequests = await _friendRequests
+        .where('toUid', isEqualTo: uid)
+        .get();
+    final userChats = await _chats
+        .where('participantIds', arrayContains: uid)
+        .get();
 
     var batch = _firestore.batch();
     var operationCount = 0;
@@ -242,10 +245,7 @@ class ChatRepository {
 
     for (final contact in contactsSnapshot.docs) {
       await queueDelete(contact.reference);
-    }
-
-    for (final contactCard in contactCardsSnapshot.docs) {
-      await queueDelete(contactCard.reference);
+      await queueDelete(_users.doc(contact.id).collection('contacts').doc(uid));
     }
 
     for (final request in outgoingRequests.docs) {
@@ -298,10 +298,7 @@ class ChatRepository {
     final batch = _firestore.batch();
 
     if (displayName != null || email != null || about != null) {
-      final contacts = await _firestore
-          .collectionGroup('contacts')
-          .where('uid', isEqualTo: uid)
-          .get();
+      final contacts = await _users.doc(uid).collection('contacts').get();
 
       for (final contact in contacts.docs) {
         final data = <String, dynamic>{
@@ -313,12 +310,18 @@ class ChatRepository {
           data['emailLower'] = email.toLowerCase();
         }
         if (about != null) data['about'] = about;
-        batch.set(contact.reference, data, SetOptions(merge: true));
+        batch.set(
+          _users.doc(contact.id).collection('contacts').doc(uid),
+          data,
+          SetOptions(merge: true),
+        );
       }
     }
 
     if (displayName != null || email != null) {
-      final chats = await _chats.where('participantIds', arrayContains: uid).get();
+      final chats = await _chats
+          .where('participantIds', arrayContains: uid)
+          .get();
       for (final chat in chats.docs) {
         final data = <String, dynamic>{
           'updatedAt': FieldValue.serverTimestamp(),
@@ -374,51 +377,86 @@ class ChatRepository {
         });
   }
 
+  Stream<int> watchIncomingFriendRequestCount() {
+    final uid = _currentUser.uid;
+
+    return _friendRequests
+        .where('toUid', isEqualTo: uid)
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
   Stream<List<Message>> watchChatSummaries() {
     final uid = _currentUser.uid;
 
     return _chats.where('participantIds', arrayContains: uid).snapshots().map((
       snapshot,
     ) {
-      final chats = snapshot.docs.where((doc) {
-        return doc.data()['hasMessages'] == true;
-      }).map((doc) {
-        final data = doc.data();
-        final participantNames = Map<String, dynamic>.from(
-          data['participantNames'] ?? {},
-        );
-        final participantEmails = Map<String, dynamic>.from(
-          data['participantEmails'] ?? {},
-        );
-        final participantPhotos = Map<String, dynamic>.from(
-          data['participantPhotos'] ?? {},
-        );
-        final unreadCounts = Map<String, dynamic>.from(
-          data['unreadCounts'] ?? {},
-        );
-        final updatedAt = data['updatedAt'];
-        final friendId = (data['participantIds'] as List<dynamic>? ?? [])
-            .whereType<String>()
-            .firstWhere((id) => id != uid, orElse: () => '');
+      final chats = snapshot.docs
+          .where((doc) {
+            return doc.data()['hasMessages'] == true;
+          })
+          .map((doc) {
+            final data = doc.data();
+            final participantNames = Map<String, dynamic>.from(
+              data['participantNames'] ?? {},
+            );
+            final participantEmails = Map<String, dynamic>.from(
+              data['participantEmails'] ?? {},
+            );
+            final participantPhotos = Map<String, dynamic>.from(
+              data['participantPhotos'] ?? {},
+            );
+            final unreadCounts = Map<String, dynamic>.from(
+              data['unreadCounts'] ?? {},
+            );
+            final updatedAt = data['updatedAt'];
+            final friendId = (data['participantIds'] as List<dynamic>? ?? [])
+                .whereType<String>()
+                .firstWhere((id) => id != uid, orElse: () => '');
 
-        return Message(
-          chatId: doc.id,
-          contactId: friendId,
-          contactEmail: (participantEmails[friendId] as String?) ?? '',
-          imagePath:
-              (participantPhotos[friendId] as String?) ??
-              'lib/assets/avatar.jpg',
-          username: (participantNames[friendId] as String?) ?? 'Unknown user',
-          currentMessage: (data['lastMessage'] as String?) ?? 'No messages yet',
-          dateTime: updatedAt is Timestamp
-              ? updatedAt.toDate()
-              : DateTime.now(),
-          badgeCount: (unreadCounts[uid] as num?)?.toInt() ?? 0,
-        );
-      }).toList();
+            return Message(
+              chatId: doc.id,
+              contactId: friendId,
+              contactEmail: (participantEmails[friendId] as String?) ?? '',
+              imagePath:
+                  (participantPhotos[friendId] as String?) ??
+                  'lib/assets/avatar.jpg',
+              username:
+                  (participantNames[friendId] as String?) ?? 'Unknown user',
+              currentMessage:
+                  (data['lastMessage'] as String?) ?? 'No messages yet',
+              dateTime: updatedAt is Timestamp
+                  ? updatedAt.toDate()
+                  : DateTime.now(),
+              badgeCount: (unreadCounts[uid] as num?)?.toInt() ?? 0,
+            );
+          })
+          .toList();
 
       chats.sort((a, b) => b.dateTime.compareTo(a.dateTime));
       return chats;
+    });
+  }
+
+  Stream<int> watchUnreadMessageCount() {
+    final uid = _currentUser.uid;
+
+    return _chats.where('participantIds', arrayContains: uid).snapshots().map((
+      snapshot,
+    ) {
+      var total = 0;
+
+      for (final chat in snapshot.docs) {
+        final data = chat.data();
+        final unreadCounts = Map<String, dynamic>.from(
+          data['unreadCounts'] ?? {},
+        );
+        total += (unreadCounts[uid] as num?)?.toInt() ?? 0;
+      }
+
+      return total;
     });
   }
 
@@ -428,8 +466,11 @@ class ChatRepository {
         .collection('messages')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => ChatMessage.fromSnapshot(doc)).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ChatMessage.fromSnapshot(doc))
+              .toList(),
+        );
   }
 
   Future<String> openChatWithContact(Contact contact) async {
@@ -462,10 +503,7 @@ class ChatRepository {
           currentAppUser.id: currentAppUser.photoPath,
           contact.id: contact.imagePath,
         },
-        'unreadCounts': {
-          currentAppUser.id: 0,
-          contact.id: 0,
-        },
+        'unreadCounts': {currentAppUser.id: 0, contact.id: 0},
         'hasMessages': false,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -520,12 +558,9 @@ class ChatRepository {
 
   Future<void> markChatAsRead(String chatId) async {
     final uid = _currentUser.uid;
-    await _chats.doc(chatId).set(
-      {
-        'unreadCounts': {uid: 0},
-      },
-      SetOptions(merge: true),
-    );
+    await _chats.doc(chatId).set({
+      'unreadCounts': {uid: 0},
+    }, SetOptions(merge: true));
   }
 
   Future<void> sendFriendRequest(String email) async {
@@ -629,10 +664,7 @@ class ChatRepository {
         senderRef.collection('contacts').doc(receiverUser.id),
         _contactMap(receiverUser),
       );
-      transaction.update(requestRef, {
-        'status': 'accepted',
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      transaction.delete(requestRef);
     });
   }
 
@@ -643,6 +675,23 @@ class ChatRepository {
     }
 
     await _friendRequests.doc(request.id).delete();
+  }
+
+  Future<void> deleteContact(Contact contact) async {
+    final uid = _currentUser.uid;
+    final currentContactRef = _users
+        .doc(uid)
+        .collection('contacts')
+        .doc(contact.id);
+    final friendContactRef = _users
+        .doc(contact.id)
+        .collection('contacts')
+        .doc(uid);
+
+    await _firestore.runTransaction((transaction) async {
+      transaction.delete(currentContactRef);
+      transaction.delete(friendContactRef);
+    });
   }
 
   Map<String, dynamic> _contactMap(AppUser user) {

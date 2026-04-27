@@ -3,15 +3,22 @@ import 'package:flutter/material.dart';
 import 'register_page.dart';
 
 class LoginOrRegisterPage extends StatefulWidget {
-  const LoginOrRegisterPage({Key? key}) : super(key: key);
+  final bool showRegisterFirst;
+
+  const LoginOrRegisterPage({super.key, this.showRegisterFirst = false});
 
   @override
   State<LoginOrRegisterPage> createState() => _LoginOrRegisterPageState();
 }
 
 class _LoginOrRegisterPageState extends State<LoginOrRegisterPage> {
-  // initially show login page
-  bool showLoginPage = true;
+  late bool showLoginPage;
+
+  @override
+  void initState() {
+    super.initState();
+    showLoginPage = !widget.showRegisterFirst;
+  }
 
   // toggle between login and register page
   void togglePages() {

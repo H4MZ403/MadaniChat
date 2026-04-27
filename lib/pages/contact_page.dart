@@ -91,6 +91,121 @@ class _ContactPageState extends State<ContactPage> {
     }
   }
 
+  Future<void> confirmDeleteContact(Contact contact) async {
+    final shouldDelete = await _showDeleteContactDialog(contact);
+    if (shouldDelete != true) {
+      return;
+    }
+
+    try {
+      await chatRepository.deleteContact(contact);
+      if (!mounted) return;
+      _showMessage('${contact.username} was removed from your contacts.');
+    } catch (error) {
+      if (!mounted) return;
+      _showMessage(error.toString());
+    }
+  }
+
+  Future<bool?> _showDeleteContactDialog(Contact contact) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: boxShadow,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: lightRed,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0X4DFF7777),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.person_remove_alt_1_rounded,
+                    color: red,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Delete contact?',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.quicksand(
+                    color: customGrey,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${contact.username} will be removed from both contact lists.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.quicksand(
+                    color: lightGrey,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, false),
+                        child: MyButton(
+                          title: 'Cancel',
+                          fontSize: 15,
+                          color: lightRed,
+                          shadowEnabled: false,
+                          fontColor: fontColor,
+                          border: Border.all(color: strokeColor, width: 1.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context, true),
+                        child: MyButton(
+                          title: 'Delete',
+                          fontSize: 15,
+                          color: lightRed,
+                          shadowEnabled: false,
+                          fontColor: red,
+                          border: Border.all(
+                            color: const Color(0X4DFF7777),
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(
       context,
@@ -156,6 +271,7 @@ class _ContactPageState extends State<ContactPage> {
                 _ContactsSection(
                   stream: chatRepository.watchContacts(),
                   onOpenChat: openChat,
+                  onDeleteContact: confirmDeleteContact,
                 ),
               ],
             ),
@@ -353,7 +469,7 @@ class _FriendRequestTile extends StatelessWidget {
                   style: GoogleFonts.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 77),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -433,10 +549,12 @@ class _RequestActionButton extends StatelessWidget {
 class _ContactsSection extends StatelessWidget {
   final Stream<List<Contact>> stream;
   final ValueChanged<Contact> onOpenChat;
+  final ValueChanged<Contact> onDeleteContact;
 
   const _ContactsSection({
     required this.stream,
     required this.onOpenChat,
+    required this.onDeleteContact,
   });
 
   @override
@@ -475,6 +593,7 @@ class _ContactsSection extends StatelessWidget {
                 child: ContactWidget(
                   contact: contact,
                   onTap: () => onOpenChat(contact),
+                  onDelete: () => onDeleteContact(contact),
                 ),
               ),
             ),

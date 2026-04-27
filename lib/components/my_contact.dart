@@ -7,8 +7,14 @@ import 'package:google_fonts/google_fonts.dart';
 class ContactWidget extends StatelessWidget {
   final Contact contact;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
 
-  const ContactWidget({super.key, required this.contact, this.onTap});
+  const ContactWidget({
+    super.key,
+    required this.contact,
+    this.onTap,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +51,7 @@ class ContactWidget extends StatelessWidget {
                     style: GoogleFonts.quicksand(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 77),
                     ),
                   ),
                 ],
@@ -53,8 +59,34 @@ class ContactWidget extends StatelessWidget {
             ),
             Icon(
               Icons.chevron_right,
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 64),
             ),
+            if (onDelete != null) ...[
+              const SizedBox(width: 4),
+              Tooltip(
+                message: 'Delete contact',
+                child: GestureDetector(
+                  onTap: onDelete,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: lightRed,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0X4DFF7777),
+                        width: 1.2,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.delete_outline_rounded,
+                      color: red,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

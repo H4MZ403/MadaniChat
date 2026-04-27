@@ -109,7 +109,7 @@ class _StartPageState extends State<StartPage> {
                               onTap: () {
                                 Navigator.pushReplacementNamed(
                                   context,
-                                  '/auth_page',
+                                  '/register_page',
                                 );
                               },
                               child: MyButton(

@@ -11,8 +11,10 @@ class MyMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.only(left: 17, right: 11, bottom: 13, top: 7),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -39,7 +41,7 @@ class MyMessage extends StatelessWidget {
                           style: GoogleFonts.quicksand(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 77),
                           ),
                         ),
                       ],
@@ -56,7 +58,7 @@ class MyMessage extends StatelessWidget {
                   style: GoogleFonts.judson(
                     fontSize: 12,
                     fontWeight: FontWeight.w900,
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 77),
                   ),
                 ),
                 if (message.badgeCount > 0)
